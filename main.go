@@ -5,10 +5,15 @@ import (
 	"image"
 	"math/rand"
 	"os"
+	"strconv"
+	"strings"
 
 	"image/color"
+	"image/gif"
 	_ "image/jpeg"
 	"image/png"
+
+	"github.com/andybons/gogif"
 )
 
 func rgbaToGray(img image.Image) *image.Gray {
@@ -18,7 +23,7 @@ func rgbaToGray(img image.Image) *image.Gray {
 	)
 	for x := 0; x < bounds.Max.X; x++ {
 		for y := 0; y < bounds.Max.Y; y++ {
-			var rgba = img.At(x, y)
+			rgba := img.At(x, y)
 			gray.Set(x, y, rgba)
 		}
 	}
@@ -33,16 +38,14 @@ func zeroToRandom(img image.Image) *image.RGBA {
 
 	for x := 0; x < bounds.Max.X; x++ {
 		for y := 0; y < bounds.Max.Y; y++ {
-			var rgba = img.At(x, y)
-
+			rgba := img.At(x, y)
 			r, g, b, a := rgba.RGBA()
-
-			var alphaPremultipliedArray = []uint32{r, g, b, a}
+			alphaPremultipliedArray := []uint32{r, g, b, a}
 
 			if r+g+b+a == 0 {
-				var randomInt1 = uint8(rand.Intn(1))
-				var randomInt2 = uint8(rand.Intn(255))
-				var randomInt3 = uint8(rand.Intn(255))
+				randomInt1 := uint8(rand.Intn(1))
+				randomInt2 := uint8(rand.Intn(255))
+				randomInt3 := uint8(rand.Intn(255))
 
 				newImg.Set(x, y, color.RGBA{randomInt1, randomInt2, randomInt3, 255})
 			} else {
@@ -71,11 +74,34 @@ func loadImage(filepath string) (image.Image, error) {
 	return img, nil
 }
 
-func main() {
-	var img, _ = loadImage("go.png")
-	var newImg = zeroToRandom(img)
+func generateGif() {
+	outGif := &gif.GIF{}
 
-	f, _ := os.Create("gen/new_10.png")
+	for imageNum := 1; imageNum < 10; imageNum++ {
+		name := strings.Join([]string{"gen/new_", strconv.Itoa(imageNum), ".png"}, "")
+		inPng, _ := loadImage(name)
+
+		bounds := inPng.Bounds()
+		palettedImage := image.NewPaletted(bounds, nil)
+		quantizer := gogif.MedianCutQuantizer{NumColor: 64}
+		quantizer.Quantize(palettedImage, bounds, inPng, image.ZP)
+
+		outGif.Image = append(outGif.Image, palettedImage)
+		outGif.Delay = append(outGif.Delay, 0)
+	}
+
+	f, _ := os.OpenFile("gen/out.gif", os.O_WRONLY|os.O_CREATE, 0600)
+	defer f.Close()
+	gif.EncodeAll(f, outGif)
+}
+
+func main() {
+	img, _ := loadImage("go.png")
+	newImg := zeroToRandom(img)
+
+	f, _ := os.Create("gen/new_1.png")
 	defer f.Close()
 	png.Encode(f, newImg)
+
+	generateGif()
 }
