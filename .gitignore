@@ -20,5 +20,8 @@
 # Go workspace file
 go.work
 
+# Generated folder contents
+gen/*
+
 # Ignore hidden files by default
 .*
