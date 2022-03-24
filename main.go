@@ -16,6 +16,8 @@ import (
 	"github.com/andybons/gogif"
 )
 
+const ImageCount = 3
+
 func rgbaToGray(img image.Image) *image.Gray {
 	var (
 		bounds = img.Bounds()
@@ -39,8 +41,7 @@ func zeroToRandom(img image.Image) *image.RGBA {
 	for x := 0; x < bounds.Max.X; x++ {
 		for y := 0; y < bounds.Max.Y; y++ {
 			rgba := img.At(x, y)
-			r, g, b, a := rgba.RGBA()
-			alphaPremultipliedArray := []uint32{r, g, b, a}
+			r, g, b, a := deMultiply(rgba)
 
 			if r+g+b+a == 0 {
 				randomInt1 := uint8(rand.Intn(1))
@@ -49,15 +50,19 @@ func zeroToRandom(img image.Image) *image.RGBA {
 
 				newImg.Set(x, y, color.RGBA{randomInt1, randomInt2, randomInt3, 255})
 			} else {
-				fmt.Printf("rgba: %+v\n", rgba)
-				fmt.Printf("alphaPremultipliedArray: %+v\n\n", alphaPremultipliedArray)
-
-				newImg.Set(x, y, rgba)
+				newImg.Set(x, y, color.RGBA{r, g, b, a})
 			}
 		}
 	}
 
 	return newImg
+}
+
+func deMultiply(preMultiplied color.Color) (uint8, uint8, uint8, uint8) {
+	divideBy := uint32(257)
+	r, g, b, a := preMultiplied.RGBA()
+	deMultiplied := color.RGBA{uint8(r / divideBy), uint8(g / divideBy), uint8(b / divideBy), uint8(a / divideBy)}
+	return deMultiplied.R, deMultiplied.G, deMultiplied.B, deMultiplied.A
 }
 
 func loadImage(filepath string) (image.Image, error) {
@@ -77,7 +82,7 @@ func loadImage(filepath string) (image.Image, error) {
 func generateGif() {
 	outGif := &gif.GIF{}
 
-	for imageNum := 1; imageNum < 10; imageNum++ {
+	for imageNum := 1; imageNum < ImageCount; imageNum++ {
 		name := strings.Join([]string{"gen/new_", strconv.Itoa(imageNum), ".png"}, "")
 		inPng, _ := loadImage(name)
 
@@ -96,7 +101,7 @@ func generateGif() {
 }
 
 func main() {
-	for imageNum := 1; imageNum <= 10; imageNum++ {
+	for imageNum := 1; imageNum <= ImageCount; imageNum++ {
 		img, _ := loadImage("go.png")
 		newImg := zeroToRandom(img)
 		name := strings.Join([]string{"gen/new_", strconv.Itoa(imageNum), ".png"}, "")
