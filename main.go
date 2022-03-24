@@ -25,7 +25,7 @@ func rgbaToGray(img image.Image) *image.Gray {
 	return gray
 }
 
-func rgbaToRandom(img image.Image) *image.RGBA {
+func zeroToRandom(img image.Image) *image.RGBA {
 	var (
 		bounds = img.Bounds()
 		newImg = image.NewRGBA(bounds)
@@ -39,17 +39,17 @@ func rgbaToRandom(img image.Image) *image.RGBA {
 
 			var alphaPremultipliedArray = []uint32{r, g, b, a}
 
-			if r > 0 {
-				fmt.Printf("rgba: %+v\n", rgba)
-				fmt.Printf("alphaPremultipliedArray: %+v\n\n", alphaPremultipliedArray)
-
-				newImg.Set(x, y, rgba)
-			} else {
-				var randomInt1 = uint8(rand.Intn(255))
+			if r+g+b+a == 0 {
+				var randomInt1 = uint8(rand.Intn(1))
 				var randomInt2 = uint8(rand.Intn(255))
 				var randomInt3 = uint8(rand.Intn(255))
 
 				newImg.Set(x, y, color.RGBA{randomInt1, randomInt2, randomInt3, 255})
+			} else {
+				fmt.Printf("rgba: %+v\n", rgba)
+				fmt.Printf("alphaPremultipliedArray: %+v\n\n", alphaPremultipliedArray)
+
+				newImg.Set(x, y, rgba)
 			}
 		}
 	}
@@ -73,9 +73,9 @@ func loadImage(filepath string) (image.Image, error) {
 
 func main() {
 	var img, _ = loadImage("go.png")
-	var newImg = rgbaToRandom(img)
+	var newImg = zeroToRandom(img)
 
-	f, _ := os.Create("new.png")
+	f, _ := os.Create("gen/new_10.png")
 	defer f.Close()
 	png.Encode(f, newImg)
 }
