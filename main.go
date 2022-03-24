@@ -96,12 +96,15 @@ func generateGif() {
 }
 
 func main() {
-	img, _ := loadImage("go.png")
-	newImg := zeroToRandom(img)
+	for imageNum := 1; imageNum <= 10; imageNum++ {
+		img, _ := loadImage("go.png")
+		newImg := zeroToRandom(img)
+		name := strings.Join([]string{"gen/new_", strconv.Itoa(imageNum), ".png"}, "")
 
-	f, _ := os.Create("gen/new_1.png")
-	defer f.Close()
-	png.Encode(f, newImg)
+		f, _ := os.Create(name)
+		defer f.Close()
+		png.Encode(f, newImg)
+	}
 
 	generateGif()
 }
