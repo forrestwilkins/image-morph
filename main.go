@@ -14,22 +14,24 @@ import (
 	"image/png"
 
 	"github.com/andybons/gogif"
+	"github.com/disintegration/imaging"
 )
 
-const ImageCount = 3
+const ImageCount = 10
 
-func rgbaToGray(img image.Image) *image.Gray {
-	var (
-		bounds = img.Bounds()
-		gray   = image.NewGray(bounds)
-	)
-	for x := 0; x < bounds.Max.X; x++ {
-		for y := 0; y < bounds.Max.Y; y++ {
-			rgba := img.At(x, y)
-			gray.Set(x, y, rgba)
-		}
-	}
+func rgbaToGray(img image.Image) *image.NRGBA {
+	gray := imaging.Grayscale(img)
+	gray = imaging.AdjustContrast(gray, 20)
+	gray = imaging.Sharpen(gray, 2)
 	return gray
+}
+
+func withImaging(img image.Image, factor float64) *image.NRGBA {
+	dstImage := imaging.AdjustGamma(img, factor*0.1)
+	dstImage = imaging.AdjustBrightness(dstImage, factor*0.5)
+	dstImage = imaging.AdjustSaturation(dstImage, factor*-8)
+	dstImage = imaging.Blur(dstImage, factor)
+	return dstImage
 }
 
 func zeroToRandom(img image.Image) *image.RGBA {
