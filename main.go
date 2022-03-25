@@ -17,7 +17,7 @@ import (
 	"github.com/disintegration/imaging"
 )
 
-const ImageCount = 10
+const ImageCount = 5
 
 func rgbaToGray(img image.Image) *image.NRGBA {
 	gray := imaging.Grayscale(img)
@@ -27,17 +27,31 @@ func rgbaToGray(img image.Image) *image.NRGBA {
 }
 
 func withImaging(img image.Image, factor float64) *image.NRGBA {
-	dstImage := imaging.AdjustGamma(img, factor*0.1)
-	dstImage = imaging.AdjustBrightness(dstImage, factor*0.5)
-	dstImage = imaging.AdjustSaturation(dstImage, factor*-8)
-	dstImage = imaging.Blur(dstImage, factor)
+	dstImage := imaging.AdjustBrightness(img, factor*0.5)
+	dstImage = imaging.Blur(dstImage, factor*0.75)
+	// dstImage = imaging.AdjustSaturation(img, factor*-8)
+	// dstImage = imaging.AdjustGamma(img, factor*0.1)
 	return dstImage
 }
 
-func zeroToRandom(img image.Image) *image.RGBA {
+func makeEmbossed(img image.Image, factor float64) *image.NRGBA {
+	adjustedFactor := factor*0.05 + 1
+	embossed := imaging.Convolve3x3(
+		img,
+		[9]float64{
+			-adjustedFactor, -adjustedFactor, 0,
+			-adjustedFactor, adjustedFactor, adjustedFactor,
+			0, adjustedFactor, adjustedFactor,
+		},
+		nil,
+	)
+	return embossed
+}
+
+func zeroToRandom(img image.Image) *image.NRGBA {
 	var (
 		bounds = img.Bounds()
-		newImg = image.NewRGBA(bounds)
+		newImg = image.NewNRGBA(bounds)
 	)
 
 	for x := 0; x < bounds.Max.X; x++ {
@@ -82,6 +96,8 @@ func loadImage(filepath string) (image.Image, error) {
 }
 
 func generateGif() {
+	fmt.Println("Generating GIF...")
+
 	outGif := &gif.GIF{}
 
 	for imageNum := 1; imageNum < ImageCount; imageNum++ {
@@ -104,8 +120,11 @@ func generateGif() {
 
 func main() {
 	for imageNum := 1; imageNum <= ImageCount; imageNum++ {
-		img, _ := loadImage("go.png")
+		fmt.Printf("Morphing image %d...\n\n", imageNum)
+
+		img, _ := loadImage("assets/source/go.png")
 		newImg := zeroToRandom(img)
+		// newImg = withImaging(newImg, float64(imageNum))
 		name := strings.Join([]string{"gen/new_", strconv.Itoa(imageNum), ".png"}, "")
 
 		f, _ := os.Create(name)
