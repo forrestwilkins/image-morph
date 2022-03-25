@@ -63,9 +63,8 @@ func zeroToRandom(img image.Image) *image.NRGBA {
 				randomR := uint8(rand.Intn(1))
 				randomG := uint8(rand.Intn(255))
 				randomB := uint8(rand.Intn(255))
-				randomA := uint8(rand.Intn(255))
 
-				newImg.Set(x, y, color.RGBA{randomR, randomG, randomB, randomA})
+				newImg.Set(x, y, color.RGBA{randomR, randomG, randomB, 255})
 			} else {
 				newImg.Set(x, y, color.RGBA{r, g, b, a})
 			}
