@@ -27,8 +27,8 @@ func rgbaToGray(img image.Image) *image.NRGBA {
 }
 
 func withImaging(img image.Image, factor float64) *image.NRGBA {
-	dstImage := imaging.AdjustBrightness(img, factor*0.5)
-	dstImage = imaging.Blur(dstImage, factor*0.75)
+	// dstImage := imaging.AdjustBrightness(img, factor*0.5)
+	dstImage := imaging.Blur(img, factor*0.75)
 	// dstImage = imaging.AdjustSaturation(img, factor*-8)
 	// dstImage = imaging.AdjustGamma(img, factor*0.1)
 	return dstImage
@@ -124,7 +124,7 @@ func main() {
 
 		img, _ := loadImage("assets/source/go.png")
 		newImg := zeroToRandom(img)
-		// newImg = withImaging(newImg, float64(imageNum))
+		// newImg := withImaging(img, float64(imageNum))
 		name := strings.Join([]string{"gen/new_", strconv.Itoa(imageNum), ".png"}, "")
 
 		f, _ := os.Create(name)
