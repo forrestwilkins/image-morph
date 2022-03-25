@@ -122,7 +122,7 @@ func main() {
 	for imageNum := 1; imageNum <= ImageCount; imageNum++ {
 		fmt.Printf("Morphing image %d...\n\n", imageNum)
 
-		img, _ := loadImage("assets/source/go.png")
+		img, _ := loadImage("assets/source/go_1.png")
 		newImg := zeroToRandom(img)
 		// newImg := withImaging(img, float64(imageNum))
 		name := strings.Join([]string{"gen/new_", strconv.Itoa(imageNum), ".png"}, "")
