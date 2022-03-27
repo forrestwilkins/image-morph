@@ -17,7 +17,7 @@ import (
 	"github.com/disintegration/imaging"
 )
 
-const ImageCount = 5
+const ImageCount = 30
 
 func rgbaToGray(img image.Image) *image.NRGBA {
 	gray := imaging.Grayscale(img)
@@ -27,10 +27,10 @@ func rgbaToGray(img image.Image) *image.NRGBA {
 }
 
 func withImaging(img image.Image, factor float64) *image.NRGBA {
-	// dstImage := imaging.AdjustBrightness(img, factor*0.5)
-	dstImage := imaging.Blur(img, factor*0.75)
+	// dstImage := imaging.Blur(img, factor*0.75)
+	dstImage := imaging.AdjustBrightness(img, factor*0.25)
 	// dstImage = imaging.AdjustSaturation(img, factor*-8)
-	// dstImage = imaging.AdjustGamma(img, factor*0.1)
+	dstImage = imaging.AdjustGamma(dstImage, factor*0.075)
 	return dstImage
 }
 
@@ -60,13 +60,13 @@ func zeroToRandom(img image.Image) *image.NRGBA {
 			r, g, b, a := deMultiply(rgba)
 
 			if r+g+b+a == 0 {
-				randomR := uint8(rand.Intn(1))
-				randomG := uint8(rand.Intn(255))
-				randomB := uint8(rand.Intn(255))
+				randomR := uint8(rand.Intn(254))
+				randomG := uint8(rand.Intn(107))
+				randomB := uint8(rand.Intn(161))
 
 				newImg.Set(x, y, color.RGBA{randomR, randomG, randomB, 255})
 			} else {
-				newImg.Set(x, y, color.RGBA{r, g, b, a})
+				newImg.Set(x, y, rgba)
 			}
 		}
 	}
@@ -118,19 +118,26 @@ func generateGif() {
 	gif.EncodeAll(f, outGif)
 }
 
-func main() {
-	for imageNum := 1; imageNum <= ImageCount; imageNum++ {
-		fmt.Printf("Morphing image %d...\n\n", imageNum)
+func generateImages(sourceImgName string, imageCount int, startNum int) {
+	for imageNum := startNum; imageNum <= imageCount; imageNum++ {
+		fmt.Printf("Generating image %d...\n\n", imageNum)
 
-		img, _ := loadImage("assets/source/go_1.png")
-		newImg := zeroToRandom(img)
-		// newImg := withImaging(img, float64(imageNum))
+		imgPath := strings.Join([]string{"assets/source/", sourceImgName}, "")
+		img, _ := loadImage(imgPath)
+		newImg := withImaging(img, float64(imageNum))
+		newImg = zeroToRandom(newImg)
 		name := strings.Join([]string{"gen/new_", strconv.Itoa(imageNum), ".png"}, "")
 
 		f, _ := os.Create(name)
 		defer f.Close()
 		png.Encode(f, newImg)
 	}
+}
+
+func main() {
+	generateImages("1.png", 10, 1)
+	generateImages("2.png", 20, 11)
+	generateImages("3.png", 30, 21)
 
 	generateGif()
 }
