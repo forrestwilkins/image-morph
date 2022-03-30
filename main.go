@@ -17,8 +17,6 @@ import (
 	"github.com/disintegration/imaging"
 )
 
-const ImageCount = 30
-
 func rgbaToGray(img image.Image) *image.NRGBA {
 	gray := imaging.Grayscale(img)
 	gray = imaging.AdjustContrast(gray, 20)
@@ -27,10 +25,12 @@ func rgbaToGray(img image.Image) *image.NRGBA {
 }
 
 func withImaging(img image.Image, factor float64) *image.NRGBA {
-	// dstImage := imaging.Blur(img, factor*0.75)
-	dstImage := imaging.AdjustBrightness(img, factor*0.25)
-	// dstImage = imaging.AdjustSaturation(img, factor*-8)
+	dstImage := rgbaToGray(img)
+	dstImage = imaging.Blur(dstImage, factor*0.75)
+	dstImage = imaging.AdjustBrightness(dstImage, factor*0.5)
+	dstImage = imaging.AdjustSaturation(dstImage, factor*-5)
 	dstImage = imaging.AdjustGamma(dstImage, factor*0.075)
+
 	return dstImage
 }
 
@@ -60,9 +60,9 @@ func zeroToRandom(img image.Image) *image.NRGBA {
 			r, g, b, a := deMultiply(rgba)
 
 			if r+g+b+a == 0 {
-				randomR := uint8(rand.Intn(254))
-				randomG := uint8(rand.Intn(107))
-				randomB := uint8(rand.Intn(161))
+				randomR := uint8(rand.Intn(50))
+				randomG := uint8(rand.Intn(245))
+				randomB := uint8(rand.Intn(120))
 
 				newImg.Set(x, y, color.RGBA{randomR, randomG, randomB, 255})
 			} else {
@@ -95,12 +95,12 @@ func loadImage(filepath string) (image.Image, error) {
 	return img, nil
 }
 
-func generateGif() {
+func generateGif(imageCount int) {
 	fmt.Println("Generating GIF...")
 
 	outGif := &gif.GIF{}
 
-	for imageNum := 1; imageNum < ImageCount; imageNum++ {
+	for imageNum := 1; imageNum < imageCount; imageNum++ {
 		name := strings.Join([]string{"gen/new_", strconv.Itoa(imageNum), ".png"}, "")
 		inPng, _ := loadImage(name)
 
@@ -119,12 +119,13 @@ func generateGif() {
 }
 
 func generateImages(sourceImgName string, imageCount int, startNum int) {
-	for imageNum := startNum; imageNum <= imageCount; imageNum++ {
-		fmt.Printf("Generating image %d...\n\n", imageNum)
+	fmt.Printf("Generating image set...\n\n")
 
+	for imageNum := startNum; imageNum <= imageCount; imageNum++ {
 		imgPath := strings.Join([]string{"assets/source/", sourceImgName}, "")
 		img, _ := loadImage(imgPath)
 		newImg := withImaging(img, float64(imageNum))
+		newImg = makeEmbossed(newImg, float64(imageNum))
 		newImg = zeroToRandom(newImg)
 		name := strings.Join([]string{"gen/new_", strconv.Itoa(imageNum), ".png"}, "")
 
@@ -135,9 +136,7 @@ func generateImages(sourceImgName string, imageCount int, startNum int) {
 }
 
 func main() {
-	generateImages("1.png", 10, 1)
-	generateImages("2.png", 20, 11)
-	generateImages("3.png", 30, 21)
-
-	generateGif()
+	imageCount := 10
+	generateImages("go.png", imageCount, 1)
+	generateGif(imageCount)
 }
